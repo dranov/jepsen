@@ -230,7 +230,7 @@
                 ; value for this event.
                 gen     (gen/update gen test ctx op')
                 ; Let the mediator know about the completion
-                _    (med/inform-complete-op op')
+                _    (med/inform-complete-op op' ctx)
                 ; Threads that crash (other than the nemesis), or which
                 ; explicitly request a new process, should be assigned new
                 ; process identifiers.
@@ -293,7 +293,7 @@
                       ; Let the generator know about the invocation
                       gen' (gen/update gen' test ctx op)
                       ; Let the mediator know about the invocation
-                      _    (med/inform-invoke-op op)
+                      _    (med/inform-invoke-op op ctx)
                       history (if (goes-in-history? op)
                                 (conj! history op)
                                 history)]

@@ -32,12 +32,7 @@
 (defn noop-nemesis
   "Set up a noop nemesis on the mediator."
   []
-  (let [nem {:enabled false
-             :op-types []
-             :enabled-op-types []
-             :enabled-ops []
-             :reset-ops []}
-        nemesis-config {:nemeses [] :opts {}}
+  (let [nemesis-config {:nemeses [] :opts {}}
         options {:form-params {:nemesis (pr-str nemesis-config)}}]
     @(http-kit-client/post (control-endpoint "/nemesis/setup") options)))
 
@@ -55,21 +50,31 @@
   []
   @(http-kit-client/post (control-endpoint "/test/before_tear_down")))
 
+(defn serialize-ctx
+  "Clean up ctx for sending to nemesis. If we send it directly,
+   it contains things like #object[io.lacuna.bifurcan.Set 0x18212778
+   which cannot be parsed by the edn_format Rust crate."
+  [ctx]
+  (let [ctx' (assoc ctx :free-threads (set (:free-threads ctx)))]
+    (pr-str ctx')))
+
 (defn nemesis-request-op
   "Requests an operation from the mediator nemesis. We don't use the result
    in passive mode, but it is still needed to advance the mediator's time."
-  []
-  @(http-kit-client/post (control-endpoint "/nemesis/op")))
+  [ctx]
+  (let [options {:form-params {:ctx (serialize-ctx ctx)
+                               :reltime (util/relative-time-nanos)}}
+        resp    @(http-kit-client/post (control-endpoint "/nemesis/op") options)]))
 
 (defn inform-invoke-op
   "Lets the mediator know that we have invoked an operation."
-  [op]
+  [op ctx]
   (let [options {:form-params {:op (pr-str op)}}]
     @(http-kit-client/post (control-endpoint "/client/invoke") options)
-    (nemesis-request-op)))
+    (nemesis-request-op ctx)))
 
 (defn inform-complete-op
   "Lets the mediator know that we have completed an operation."
-  [op]
+  [op ctx]
   (let [options {:form-params {:op (pr-str op)}}]
     @(http-kit-client/post (control-endpoint "/client/complete") options)))
