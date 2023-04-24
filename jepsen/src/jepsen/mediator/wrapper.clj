@@ -55,11 +55,18 @@
   []
   @(http-kit-client/post (control-endpoint "/test/before_tear_down")))
 
+(defn nemesis-request-op
+  "Requests an operation from the mediator nemesis. We don't use the result
+   in passive mode, but it is still needed to advance the mediator's time."
+  []
+  @(http-kit-client/post (control-endpoint "/nemesis/op")))
+
 (defn inform-invoke-op
   "Lets the mediator know that we have invoked an operation."
   [op]
   (let [options {:form-params {:op (pr-str op)}}]
-    @(http-kit-client/post (control-endpoint "/client/invoke") options)))
+    @(http-kit-client/post (control-endpoint "/client/invoke") options)
+    (nemesis-request-op)))
 
 (defn inform-complete-op
   "Lets the mediator know that we have completed an operation."
