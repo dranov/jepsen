@@ -1,4 +1,4 @@
-(defproject jepsen "0.2.7"
+(defproject jepsen "0.2.7-PASSIVE"
   :description "Distributed systems testing framework."
   :url         "https://jepsen.io"
   :license {:name "Eclipse Public License"
@@ -17,6 +17,8 @@
                  [http-kit "2.6.0"]
                  [ring "1.9.5"]
                  [com.hierynomus/sshj "0.33.0"]
+                 [compojure "1.6.2"]
+                 [clj-http "3.12.3"]
                  [com.jcraft/jsch.agentproxy.connector-factory "0.0.9"]
                  [com.jcraft/jsch.agentproxy.sshj "0.0.9"
                   :exclusions [net.schmizz/sshj]]

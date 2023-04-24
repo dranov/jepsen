@@ -29,6 +29,7 @@
             [jepsen.os :as os]
             [jepsen.db :as db]
             [jepsen.control :as control]
+            [jepsen.mediator [wrapper :as med]]
             [jepsen.generator :as generator]
             [jepsen.checker :as checker]
             [jepsen.client :as client]
@@ -98,6 +99,15 @@
      ~@body
      (finally
        (control/on-nodes ~test (partial os/teardown! (:os ~test))))))
+
+(defmacro with-mediator
+  "Wraps body in mediator interaction setup and teardown."
+  [test & body]
+  `(try
+     (med/inform-mediator ~test :start)
+     ~@body
+     (finally
+       (med/inform-mediator ~test :end))))
 
 (defn snarf-logs!
   "Downloads logs for a test. Updates symlinks."
@@ -383,19 +393,24 @@
                 test (with-sessions [test test]
                        ; Launch OS, DBs, evaluate test
                        (let [test (with-os test
-                                    (with-db test
-                                      (util/with-relative-time
+                                    (with-mediator test
+                                      (with-db test
+                                        (util/with-relative-time
+                                          (med/start-mediator-time)
                                         ; Run a single case
-                                        (let [test (-> test
-                                                       (assoc :history
-                                                              (run-case! test))
+                                          (let [test (-> test
+                                                         (assoc :history
+                                                                (run-case! test))
                                                        ; Remove state
-                                                       (dissoc :barrier
-                                                               :sessions))
-                                              _ (info "Run complete, writing")
-                                              test (if (:name test)
-                                                     (store/save-1! test writer)
-                                                     test)]
-                                          test))))]
+                                                         (dissoc :barrier
+                                                                 :sessions))
+                                                _ (info "Run complete, writing")
+                                                test (if (:name test)
+                                                       (store/save-1! test writer)
+                                                       test)]
+                                        ;; inform the mediator that the test has finished execution,
+                                        ;; and we are about to tear down the DB
+                                            (med/about-to-tear-down-db)
+                                            test)))))]
                          (analyze! test writer)))]
             (log-results test)))))))
