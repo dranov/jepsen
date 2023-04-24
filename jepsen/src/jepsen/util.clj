@@ -340,12 +340,22 @@
   "A reference point for measuring time in a test run."
   nil)
 
+(def ^:dynamic ^Long *absolute-time-origin*
+  "A reference point for measuring time in a test run."
+  nil)
+
 (defmacro with-relative-time
   "Binds *relative-time-origin* at the start of body."
   [& body]
-  `(binding [*relative-time-origin* (linear-time-nanos)]
+  `(binding [*absolute-time-origin* (System/currentTimeMillis)
+             *relative-time-origin* (linear-time-nanos)]
      (info "Relative time begins now")
      ~@body))
+
+(defn origin-time
+  "Return the origin timestamp."
+  []
+  {:absolute *absolute-time-origin* :relative *relative-time-origin*})
 
 (defn relative-time-nanos
   "Time in nanoseconds since *relative-time-origin*"
