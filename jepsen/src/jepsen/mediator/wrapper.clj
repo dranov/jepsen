@@ -29,12 +29,26 @@
       (info "Succesfully established contact with the mediator.")))
   test)
 
+(defn noop-nemesis
+  "Set up a noop nemesis on the mediator."
+  []
+  (let [nem {:enabled false
+             :op-types []
+             :enabled-op-types []
+             :enabled-ops []
+             :reset-ops []}
+        nemesis-config {:nemeses [] :opts {}}
+        options {:form-params {:nemesis (pr-str nemesis-config)}}]
+    @(http-kit-client/post (control-endpoint "/nemesis/setup") options)))
+
 (defn start-mediator-time
   "Lets the mediator know that relative time has started."
   []
   (let [ts (util/origin-time)
         options {:form-params ts}]
-    @(http-kit-client/post (control-endpoint "/test/start_time") options)))
+    @(http-kit-client/post (control-endpoint "/test/start_time") options)
+    ;; Also set-up a noop nemesis
+    (noop-nemesis)))
 
 (defn about-to-tear-down-db
   "Lets the mediator know that the DB is going to be teared down."
