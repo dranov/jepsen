@@ -10,6 +10,7 @@
                     [nemesis        :as nemesis]
                     [util           :as util]]
             [jepsen.generator :as gen]
+            [jepsen.mediator.wrapper :as med]
             [slingshot.slingshot :refer [try+ throw+]])
   (:import (java.util.concurrent ArrayBlockingQueue
                                  TimeUnit)
@@ -228,6 +229,8 @@
                 ; process here, so that thread->process recovers the right
                 ; value for this event.
                 gen     (gen/update gen test ctx op')
+                ; Let the mediator know about the completion
+                _    (med/inform-complete-op op')
                 ; Threads that crash (other than the nemesis), or which
                 ; explicitly request a new process, should be assigned new
                 ; process identifiers.
@@ -289,6 +292,8 @@
                                                  thread))
                       ; Let the generator know about the invocation
                       gen' (gen/update gen' test ctx op)
+                      ; Let the mediator know about the invocation
+                      _    (med/inform-invoke-op op)
                       history (if (goes-in-history? op)
                                 (conj! history op)
                                 history)]

@@ -54,3 +54,15 @@
   "Lets the mediator know that the DB is going to be teared down."
   []
   @(http-kit-client/post (control-endpoint "/test/before_tear_down")))
+
+(defn inform-invoke-op
+  "Lets the mediator know that we have invoked an operation."
+  [op]
+  (let [options {:form-params {:op (pr-str op)}}]
+    @(http-kit-client/post (control-endpoint "/client/invoke") options)))
+
+(defn inform-complete-op
+  "Lets the mediator know that we have completed an operation."
+  [op]
+  (let [options {:form-params {:op (pr-str op)}}]
+    @(http-kit-client/post (control-endpoint "/client/complete") options)))
